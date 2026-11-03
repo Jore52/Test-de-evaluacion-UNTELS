@@ -1,0 +1,1 @@
+ALTER TABLE "sheet_links" ADD COLUMN "columns" jsonb DEFAULT '[]'::jsonb NOT NULL;

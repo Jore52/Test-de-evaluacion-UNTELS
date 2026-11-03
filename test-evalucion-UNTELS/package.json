@@ -1,0 +1,47 @@
+{
+  "name": "web-front",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env src/scripts/migrate.ts",
+    "admin": "tsx --env-file-if-exists=.env src/scripts/admin.ts",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.14",
+    "@fontsource/noto-sans": "^5.3.0",
+    "@neondatabase/serverless": "^1.2.0",
+    "arctic": "^3.7.0",
+    "drizzle-orm": "^0.45.4",
+    "lucide-react": "^1.66.0",
+    "next": "16.4.3",
+    "next-themes": "^0.4.6",
+    "qrcode": "^1.5.4",
+    "qrcode.react": "^4.2.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^24.19.2",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
+  }
+}

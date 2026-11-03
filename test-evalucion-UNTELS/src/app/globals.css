@@ -1,0 +1,44 @@
+@import "tailwindcss";
+/* el tema va por data-theme (next-themes), no por el modo del sistema operativo */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --primary: #0f766e;
+  --on-primary: #ffffff;
+  --primary-soft: #ccfbf1;
+}
+
+[data-theme='dark'],
+.dark {
+  --background: #0b1220;
+  --surface: #111b2e;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --primary: #2dd4bf;
+  --on-primary: #042f2e;
+  --primary-soft: #134e4a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth transitions for theme switch */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Reset for transitions on interactive elements to not slow them down */
+button, a, input, textarea, select {
+  transition-duration: 150ms;
+}
