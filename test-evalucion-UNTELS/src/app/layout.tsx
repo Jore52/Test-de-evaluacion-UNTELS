@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body>
-        <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="data-theme" defaultTheme="light">
           {children}
         </ThemeProvider>
       </body>
