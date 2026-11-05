@@ -74,7 +74,7 @@ function Preview() {
         <main>
           <UntelsBanner />
           <div className="px-3 py-4 sm:p-8">
-          <div className="mx-auto w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 sm:p-8 shadow-sm">{body}</div>
+          <div className="mx-auto w-full max-w-4xl rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 sm:p-8 shadow-sm">{body}</div>
           </div>
         </main>
       ) : (

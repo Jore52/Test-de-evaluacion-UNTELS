@@ -69,7 +69,7 @@ export interface GeneralConfig {
 }
 
 export interface Cover {
-  desktop: string; // /api/images/<id>, proporción sugerida 3:1
+  desktop: string; // /api/images/<id>, proporción sugerida 2:1
   mobile: string;  // 4:5; vacío = usa la de escritorio
   showText: boolean;
   overlayColor: string; // #rrggbb del fondo del texto

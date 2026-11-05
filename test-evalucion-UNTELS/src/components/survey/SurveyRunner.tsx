@@ -79,6 +79,9 @@ export default function SurveyRunner({ instrument, onSubmit, getImage, previous,
       if (q.required && empty) newErrors.add(q.id);
     }
     setErrors(newErrors);
+    // el Set conserva el orden de currentQuestions: el primero es la primera obligatoria vacía
+    const [first] = newErrors;
+    if (first) document.getElementById(`pregunta-${first}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return newErrors.size === 0;
   };
 
@@ -148,8 +151,9 @@ export default function SurveyRunner({ instrument, onSubmit, getImage, previous,
     const textColor = img ? textOn(cover.overlayColor) : undefined;
     return (
       <div className="text-center space-y-6 pb-6">
-        {/* con imagen, la misma proporción del recorte (4:5 móvil, 3:1 escritorio); min-h-min hace que crezca si el texto es largo (overflow-hidden anula ese mínimo) */}
-        <div className={`relative overflow-hidden rounded-xl flex items-center justify-center p-4 sm:p-8 ${img ? (cover.mobile ? 'aspect-[4/5]' : 'aspect-[3/1]') + ' sm:aspect-[3/1] min-h-min' : 'min-h-[55vh] sm:min-h-[280px]'}`}>
+        {/* con imagen, la misma proporción del recorte (4:5 móvil, 2:1 escritorio); min-h-min hace que crezca si el texto es largo (overflow-hidden anula ese mínimo).
+            max-w limita el alto en escritorio (100dvh - banner, cabecera, paddings y botón) para que "Comenzar" siga visible */}
+        <div className={`relative overflow-hidden rounded-xl flex items-center justify-center p-4 sm:p-8 ${img ? (cover.mobile ? 'aspect-[4/5]' : 'aspect-[2/1]') + ' sm:aspect-[2/1] sm:mx-auto sm:max-w-[calc((100dvh-22rem)*2)] min-h-min' : 'min-h-[55vh] sm:min-h-[280px]'}`}>
           {img && (
             <picture>
               {cover.mobile && <source media="(max-width: 639px)" srcSet={cover.mobile} />}

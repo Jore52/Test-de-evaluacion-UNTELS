@@ -11,7 +11,7 @@ import type { Cover } from '@/lib/types';
 const EMPTY: Cover = { desktop: '', mobile: '', showText: true, overlayColor: '#000000', overlayOpacity: 0.5 };
 
 const SLOTS = [
-  { key: 'desktop', label: 'Escritorio', hint: 'Horizontal 3:1 (1600×533)', aspect: 'aspect-[3/1]', ratio: 3, out: [1600, 533] },
+  { key: 'desktop', label: 'Escritorio', hint: 'Horizontal 2:1 (1600×800)', aspect: 'aspect-[2/1]', ratio: 2, out: [1600, 800] },
   { key: 'mobile', label: 'Móvil (opcional)', hint: 'Vertical 4:5 (900×1125). Si falta, se usa la de escritorio', aspect: 'aspect-[4/5] max-w-[160px]', ratio: 4 / 5, out: [900, 1125] },
 ] as const;
 

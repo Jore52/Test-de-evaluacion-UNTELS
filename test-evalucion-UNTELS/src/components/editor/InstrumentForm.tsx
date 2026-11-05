@@ -34,7 +34,7 @@ export default function InstrumentForm() {
       {cover && imageOnly ? (
         <div className="flex flex-wrap items-start gap-4">
           {([
-            ['Escritorio', cover.desktop, 'flex-1 min-w-[220px]', 'aspect-[3/1]'],
+            ['Escritorio', cover.desktop, 'flex-1 min-w-[220px]', 'aspect-[2/1]'],
             ['Móvil', cover.mobile || cover.desktop, 'w-[140px]', 'aspect-[4/5]'],
           ] as const).map(([label, src, width, aspect]) => (
             <figure key={label} className={width}>

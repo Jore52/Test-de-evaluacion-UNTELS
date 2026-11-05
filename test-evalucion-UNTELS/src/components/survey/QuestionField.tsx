@@ -16,7 +16,7 @@ interface QuestionFieldProps {
 
 export default function QuestionField({ question, number, value, onChange, hasError }: QuestionFieldProps) {
   return (
-    <div className={`space-y-3 rounded-xl p-2 sm:p-4 transition-colors ${hasError ? 'bg-red-50 dark:bg-red-900/10 ring-1 ring-red-300 dark:ring-red-800' : ''}`}>
+    <div id={`pregunta-${question.id}`} className={`space-y-3 rounded-xl p-2 sm:p-4 transition-colors ${hasError ? 'bg-red-50 dark:bg-red-900/10 ring-1 ring-red-300 dark:ring-red-800' : ''}`}>
       <label className="block text-sm font-medium text-[var(--text)]">
         <span className="text-[var(--muted)] mr-1">{number}.</span>
         {question.text || 'Pregunta sin texto'}
