@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Send, CheckCircle2, PlayCircle, GraduationCap, TrendingUp, Download, Share2, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, CheckCircle2, PlayCircle, GraduationCap, Trophy, Download, Share2, RotateCcw } from 'lucide-react';
 import type { AnswerValue, Instrument, Question } from '@/lib/types';
-import { LEVEL_LABELS, type Level, type SurveyResult } from '@/lib/scoring';
+import { rankCareers, type SurveyResult } from '@/lib/scoring';
 import { isAnswerEmpty } from '@/lib/answers';
 import { shareOrDownload } from '@/lib/share';
+import { textOn } from '@/lib/image';
 import Button from '@/components/ui/Button';
 import QuestionField from './QuestionField';
+import AdCarousel from './AdCarousel';
 
 export interface Done { name: string; answers: Record<string, AnswerValue>; result: SurveyResult; already?: boolean }
 
@@ -22,12 +24,6 @@ interface SurveyRunnerProps {
   /** Vista previa: permite reiniciar. */
   onRestart?: () => void;
 }
-
-const LEVEL_BADGE_COLORS: Record<Level, string> = {
-  low: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  mid: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  high: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-};
 
 export default function SurveyRunner({ instrument, onSubmit, getImage, previous, onRestart }: SurveyRunnerProps) {
   const single = instrument.generalConfig.singleResponse;
@@ -147,17 +143,32 @@ export default function SurveyRunner({ instrument, onSubmit, getImage, previous,
   }
 
   if (!started) {
+    const cover = instrument.generalConfig.cover;
+    const img = cover?.desktop;
+    const textColor = img ? textOn(cover.overlayColor) : undefined;
     return (
-      <div className="text-center py-10 space-y-6">
-        <div className="space-y-3 max-w-md mx-auto">
-          <h1 className="text-2xl font-bold text-[var(--text)]">{instrument.title || 'Sin título'}</h1>
-          {instrument.description && (
-            <p className="text-sm text-[var(--muted)] leading-relaxed whitespace-pre-wrap">{instrument.description}</p>
+      <div className="text-center space-y-6 pb-6">
+        {/* con imagen, la misma proporción del recorte (4:5 móvil, 3:1 escritorio); min-h-min hace que crezca si el texto es largo (overflow-hidden anula ese mínimo) */}
+        <div className={`relative overflow-hidden rounded-xl flex items-center justify-center p-4 sm:p-8 ${img ? (cover.mobile ? 'aspect-[4/5]' : 'aspect-[3/1]') + ' sm:aspect-[3/1] min-h-min' : 'min-h-[55vh] sm:min-h-[280px]'}`}>
+          {img && (
+            <picture>
+              {cover.mobile && <source media="(max-width: 639px)" srcSet={cover.mobile} />}
+              <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            </picture>
           )}
-          {previous && !single && (
-            <p className="text-sm text-[var(--primary)]">Ya respondiste. Puedes revisar y modificar tus respuestas.</p>
-          )}
+          <div
+            className={`relative space-y-3 max-w-md ${img ? (cover.showText ? 'rounded-xl px-5 py-4' : 'sr-only') : ''}`}
+            style={img && cover.showText ? { backgroundColor: `color-mix(in srgb, ${cover.overlayColor} ${Math.round(cover.overlayOpacity * 100)}%, transparent)`, color: textColor } : undefined}
+          >
+            <h1 className={`text-2xl font-bold ${img ? '' : 'text-[var(--text)]'}`}>{instrument.title || 'Sin título'}</h1>
+            {instrument.description && (
+              <p className={`text-sm leading-relaxed whitespace-pre-wrap ${img ? 'opacity-90' : 'text-[var(--muted)]'}`}>{instrument.description}</p>
+            )}
+          </div>
         </div>
+        {previous && !single && (
+          <p className="text-sm text-[var(--primary)]">Ya respondiste. Puedes revisar y modificar tus respuestas.</p>
+        )}
         <div className="flex justify-center">
           <Button onClick={() => setStarted(true)} icon={<PlayCircle className="h-4 w-4" />}>
             {previous && !single ? 'Modificar respuestas' : 'Comenzar'}
@@ -282,87 +293,66 @@ function ResultScreen({ instrument, done, getImage, onRestart, onEdit }: {
     }
   };
 
-  const highAreas = result.areas.filter((a) => a.level === 'high');
-  const otherAreas = result.areas.filter((a) => a.level !== 'high');
+  const careers = result.isTest ? rankCareers(instrument, result.areas) : [];
+  const [top, ...rest] = careers;
+  const ads = instrument.generalConfig.resultImages ?? [];
 
   return (
-    <div className="space-y-8 py-4">
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mx-auto">
-          <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <h2 className="text-xl font-bold text-[var(--text)]">
+    <div className="space-y-4">
+      <div className="text-center space-y-1">
+        <h2 className="inline-flex items-center justify-center gap-1.5 text-lg sm:text-xl font-bold text-[var(--text)]">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           {instrument.generalConfig.finalTitle || (result.isTest ? '¡Test completado!' : '¡Respuestas enviadas!')}
         </h2>
-        {done.already && <p className="text-sm text-[var(--primary)]">Ya habías respondido este instrumento. Este es tu resultado.</p>}
-        <p className="text-sm text-[var(--muted)] max-w-md mx-auto whitespace-pre-wrap">
-          {instrument.generalConfig.finalMessage || (result.isTest ? 'Estos son tus resultados según tus respuestas.' : '¡Gracias por completar el instrumento!')}
+        {done.name && <p className="text-sm font-semibold text-[var(--primary)]">{done.name}</p>}
+        {done.already && <p className="text-xs sm:text-sm text-[var(--primary)]">Ya habías respondido este instrumento. Este es tu resultado.</p>}
+        <p className="text-xs sm:text-sm text-[var(--muted)] max-w-md mx-auto whitespace-pre-wrap">
+          {instrument.generalConfig.finalMessage || (result.isTest ? 'Estas son las carreras más afines a tu perfil.' : '¡Gracias por completar el instrumento!')}
         </p>
       </div>
 
-      {result.isTest && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[var(--primary)]" />
-            <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">Tus áreas destacadas</h3>
-          </div>
-          {highAreas.length === 0 ? (
-            <p className="text-sm text-[var(--muted)] italic pl-1">No alcanzaste nivel alto en ningún área.</p>
-          ) : (
-            <div className="space-y-2">
-              {highAreas.map((area) => (
-                <div key={area.id} className="flex items-center justify-between rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
-                    <span className="text-sm font-medium text-[var(--text)]">{area.name}</span>
-                  </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Alto</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {otherAreas.length > 0 && (
-            <div className="space-y-1.5 pt-1">
-              {otherAreas.map((area) => (
-                <div key={area.id} className="flex items-center justify-between rounded-lg px-4 py-2 bg-[var(--surface)]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-2.5 w-2.5 rounded-full shrink-0 opacity-60" style={{ backgroundColor: area.color }} />
-                    <span className="text-sm text-[var(--muted)]">{area.name}</span>
-                  </div>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${LEVEL_BADGE_COLORS[area.level]}`}>
-                    {LEVEL_LABELS[area.level]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {result.isTest && instrument.careers.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
+      {top && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5">
             <GraduationCap className="h-4 w-4 text-[var(--primary)]" />
-            <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">Carreras recomendadas</h3>
+            <h3 className="text-xs font-semibold text-[var(--text)] uppercase tracking-wider">Carreras recomendadas</h3>
           </div>
-          {result.careers.length === 0 ? (
-            <p className="text-sm text-[var(--muted)] italic pl-1">No hay carreras que coincidan con tu perfil actual.</p>
-          ) : (
-            <div className="space-y-2">
-              {result.careers.map((c) => (
-                <div key={c} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <GraduationCap className="h-4 w-4 text-[var(--primary)] shrink-0" />
-                  <span className="text-sm font-medium text-[var(--text)]">{c}</span>
-                </div>
-              ))}
+
+          <div className="rounded-xl border-2 border-[var(--primary)] bg-[var(--primary-soft)] p-3 space-y-1.5">
+            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--primary)]">
+              <Trophy className="h-3.5 w-3.5" /> Carrera más recomendada según tu perfil
+            </span>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-base sm:text-lg font-bold leading-tight text-[var(--text)]">{top.name}</p>
+              <span className="text-base font-bold tabular-nums text-[var(--primary)]">{top.match}%</span>
             </div>
+            <MatchBar match={top.match} strong />
+            {top.description && <Description text={top.description} className="text-[var(--text)]" />}
+          </div>
+
+          {rest.length > 0 && (
+            <ol className="space-y-1.5">
+              {rest.map((c, i) => (
+                <li key={c.id} className="flex gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--background)] p-2.5">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[11px] font-bold text-[var(--muted)]">{i + 2}</span>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-sm font-semibold leading-tight text-[var(--text)]">{c.name}</p>
+                      <span className="text-xs font-semibold tabular-nums text-[var(--text)]">{c.match}%</span>
+                    </div>
+                    <MatchBar match={c.match} />
+                    {c.description && <Description text={c.description} className="text-[var(--muted)]" />}
+                  </div>
+                </li>
+              ))}
+            </ol>
           )}
         </div>
       )}
 
       {imgError && <p role="alert" className="text-center text-sm text-red-600">{imgError}</p>}
 
-      <div className="pt-2 flex flex-wrap justify-center gap-2">
+      <div className="pt-1 flex flex-wrap justify-center gap-2">
         <Button variant="secondary" onClick={() => withImage('download')} disabled={busy !== null} icon={<Download className="h-4 w-4" />}>
           {busy === 'download' ? 'Generando…' : 'Descargar JPG'}
         </Button>
@@ -376,6 +366,31 @@ function ResultScreen({ instrument, done, getImage, onRestart, onEdit }: {
           <Button variant="ghost" onClick={onRestart} icon={<RotateCcw className="h-4 w-4" />}>Reiniciar vista previa</Button>
         )}
       </div>
+
+      <AdCarousel images={ads} />
+    </div>
+  );
+}
+
+function MatchBar({ match, strong }: { match: number; strong?: boolean }) {
+  return (
+    <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface)]" role="progressbar" aria-valuenow={match} aria-valuemin={0} aria-valuemax={100} aria-label="Afinidad">
+      <div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${match}%`, opacity: strong ? 1 : 0.75 }} />
+    </div>
+  );
+}
+
+/** En móvil corta a 3 líneas (así caben varias carreras en pantalla); en escritorio se ve completa. */
+function Description({ text, className }: { text: string; className: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <p className={`text-xs leading-snug whitespace-pre-wrap ${open ? '' : 'line-clamp-3'} sm:line-clamp-none ${className}`}>{text}</p>
+      {text.length > 120 && (
+        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="sm:hidden mt-0.5 text-[11px] font-medium text-[var(--primary)]">
+          {open ? 'Ver menos' : 'Ver más'}
+        </button>
+      )}
     </div>
   );
 }

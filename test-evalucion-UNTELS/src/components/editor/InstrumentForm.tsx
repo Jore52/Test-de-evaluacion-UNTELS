@@ -11,6 +11,8 @@ export default function InstrumentForm() {
   const showScoring = instrument.generalConfig.scoringMode; // se guarda con el instrumento: sobrevive a cambios de pestaña y recargas
 
   const hasSections = instrument.sectionBreaks.length > 0;
+  const cover = instrument.generalConfig.cover;
+  const imageOnly = !!cover?.desktop && !cover.showText; // el encuestado solo ve la imagen: el editor muestra lo mismo
 
   // Calculate total max score
   const totalMaxScore = instrument.questions.reduce((sum, q) => {
@@ -29,6 +31,20 @@ export default function InstrumentForm() {
 
   return (
     <div className="space-y-6">
+      {cover && imageOnly ? (
+        <div className="flex flex-wrap items-start gap-4">
+          {([
+            ['Escritorio', cover.desktop, 'flex-1 min-w-[220px]', 'aspect-[3/1]'],
+            ['Móvil', cover.mobile || cover.desktop, 'w-[140px]', 'aspect-[4/5]'],
+          ] as const).map(([label, src, width, aspect]) => (
+            <figure key={label} className={width}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- imagen propia de /api/images */}
+              <img src={src} alt={`Portada ${label}`} className={`w-full ${aspect} rounded-lg object-cover border border-[var(--border)]`} />
+              <figcaption className="mt-1 text-xs text-[var(--muted)]">{label}</figcaption>
+            </figure>
+          ))}
+        </div>
+      ) : (<>
       {/* Title */}
       <div>
         <input
@@ -50,6 +66,7 @@ export default function InstrumentForm() {
           className="w-full bg-transparent text-sm text-[var(--text)] outline-none border border-[var(--border)] rounded-lg p-3 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-colors resize-y placeholder:text-[var(--muted)]"
         />
       </div>
+      </>)}
 
       {/* Scoring toggle + Section controls */}
       {instrument.questions.length > 0 && (

@@ -1,4 +1,4 @@
-# test-evalucion-UNTELS — Instrumentos de Evaluación
+# web-front — Instrumentos de Evaluación
 
 Editor de instrumentos (tests y encuestas), enlace público para responder, resultados, imagen JPG del resultado y sincronización con Google Sheets.
 
@@ -7,7 +7,7 @@ Todo corre en servicios **gratuitos**: Vercel Hobby (app), Neon Free (Postgres),
 ## Desarrollo local
 
 ```bash
-cd test-evalucion-UNTELS
+cd web-front
 npm install
 cp .env.example .env          # completa APP_SECRET (ver comentario en el archivo)
 npm run db:migrate            # base local PGlite en ./.data/dev
@@ -44,7 +44,7 @@ PGlite admite un solo proceso: detén `npm run dev` antes de usar `npm run admin
    DATABASE_URL="postgresql://...directa..." npm run admin -- agregar tu-correo@gmail.com
    ```
    `APP_SECRET` debe ser **el mismo** que pongas en Vercel: cifra el código de emergencia y los permisos de Sheets.
-3. **Vercel** (plan Hobby): importa el repositorio con *Root Directory* `test-evalucion-UNTELS`. *Build Command*:
+3. **Vercel** (plan Hobby): importa el repositorio con *Root Directory* `web-front`. *Build Command*:
    `if [ "$VERCEL_ENV" = "production" ]; then npm run db:migrate; fi && npm run build`
 4. **Variables de entorno** en Vercel (Production):
    - `DATABASE_URL`: cadena **pooled** de Neon.

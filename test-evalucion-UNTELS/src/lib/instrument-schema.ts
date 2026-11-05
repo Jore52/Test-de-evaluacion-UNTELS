@@ -6,6 +6,8 @@ const id = z.string().min(1).max(100);
 const num = z.number().finite();
 const range = z.tuple([num, num]);
 const level = z.enum(['low', 'mid', 'high']);
+// las imágenes viven en su tabla; el doc solo guarda su enlace (vacío = sin imagen)
+const image = z.string().regex(/^(\/api\/images\/[0-9a-f-]{36})?$/);
 
 // Valida la forma del Instrument que guarda el editor (frontera de confianza del PUT).
 export const instrumentSchema = z.object({
@@ -29,8 +31,14 @@ export const instrumentSchema = z.object({
   areas: z.array(z.object({ id, name: str, color: z.string().max(50), questionIds: z.array(id) })).max(50),
   percentiles: z.array(z.object({ id, label: str, number: num, values: z.record(z.string(), num) })).max(100),
   levels: z.array(z.object({ areaId: id, low: range, mid: range, high: range })),
-  careers: z.array(z.object({ id, name: str, requirements: z.record(z.string(), level) })).max(200),
-  generalConfig: z.object({ singleResponse: z.boolean(), finalTitle: str.default(''), scoringMode: z.boolean().default(false), finalMessage: str }),
+  careers: z.array(z.object({ id, name: str, requirements: z.record(z.string(), level), description: str.default('') })).max(200),
+  generalConfig: z.object({ singleResponse: z.boolean(), finalTitle: str.default(''), scoringMode: z.boolean().default(false), finalMessage: str,
+    cover: z.object({
+      desktop: image, mobile: image, showText: z.boolean(),
+      overlayColor: z.string().regex(/^#[0-9a-f]{6}$/i), overlayOpacity: z.number().min(0).max(1),
+    }).optional().catch(undefined), // una portada antigua (data URL) se descarta en vez de bloquear el guardado
+    resultImages: z.array(image.min(1)).max(6).default([]),
+  }),
   sectionBreaks: z.array(z.number().int()),
   sectionMessages: z.array(z.object({ afterIndex: z.number().int(), text: str })),
   createdAt: z.string(),

@@ -8,7 +8,7 @@ import EditorHeader, { type SaveState } from '@/components/editor/EditorHeader';
 import InstrumentForm from '@/components/editor/InstrumentForm';
 import ConfigPanel from '@/components/editor/config/ConfigPanel';
 import ResultsPanel from '@/components/results/ResultsPanel';
-import { loadInstrument, saveInstrument, deleteInstrument, duplicateInstrument, publishInstrument } from '@/lib/storage';
+import { loadInstrument, saveInstrument, deleteInstrument, duplicateInstrument, publishInstrument, countResponses } from '@/lib/storage';
 import type { Instrument } from '@/lib/types';
 
 type ViewType = 'editor' | 'config' | 'results';
@@ -43,11 +43,15 @@ function Editor() {
   const { saveState, flush } = useAutoSave(instrument);
   const sheetsReturn = useSearchParams().has('sheets'); // al volver de Google se abre Configuración
   const [view, setView] = useState<ViewType>(sheetsReturn ? 'config' : 'editor');
+  const [responseCount, setResponseCount] = useState<number | null>(null);
+  useEffect(() => {
+    countResponses(instrument.id).then((r) => setResponseCount(r.count)).catch(() => {}); // sin número si falla: no bloquea el editor
+  }, [instrument.id]);
 
   const views: { id: ViewType; label: string }[] = [
     { id: 'editor', label: 'Editor' },
     { id: 'config', label: 'Configuración' },
-    { id: 'results', label: 'Resultados' },
+    { id: 'results', label: responseCount === null ? 'Resultados' : `Resultados (${responseCount})` },
   ];
 
   const handlePreview = async () => {
@@ -107,7 +111,7 @@ function Editor() {
           </div>
         )}
         {view === 'config' && <ConfigPanel />}
-        {view === 'results' && <ResultsPanel />}
+        {view === 'results' && <ResultsPanel onCount={setResponseCount} />}
       </main>
     </div>
   );

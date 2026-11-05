@@ -76,3 +76,25 @@ export function computeResult(inst: Instrument, answers: Record<string, AnswerVa
 
   return { isTest: isTest(inst), totalScore, areas, careers };
 }
+
+export interface CareerRank { id: string; name: string; description: string; match: number }
+
+/** Todas las carreras, de más a menos afín. Se calcula al mostrar, así sirve también para respuestas ya guardadas. */
+export function rankCareers(inst: Instrument, areas: AreaResult[]): CareerRank[] {
+  const byId = new Map(areas.map((a) => [a.id, a]));
+  const ranked = inst.careers.map((c) => {
+    let total = 0, got = 0, tie = 0;
+    for (const [areaId, l] of Object.entries(c.requirements)) {
+      if (!l) continue;
+      const area = byId.get(areaId);
+      const req = LEVEL_ORDER[l] + 1; // el requisito Alto pesa más
+      const user = LEVEL_ORDER[area?.level ?? 'low'] + 1;
+      total += req;
+      got += Math.min(user, req); // crédito parcial: pide Alto y tiene Medio = 2/3
+      tie += area ? area.percentile ?? area.score : 0;
+    }
+    return { id: c.id, name: c.name, description: c.description ?? '', match: total ? Math.round((100 * got) / total) : 0, tie };
+  });
+  ranked.sort((a, b) => b.match - a.match || b.tie - a.tie || a.name.localeCompare(b.name, 'es'));
+  return ranked.map(({ id, name, description, match }) => ({ id, name, description, match }));
+}

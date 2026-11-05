@@ -2,12 +2,17 @@
 
 import { useInstrument } from '@/context/InstrumentContext';
 import Switch from '@/components/ui/Switch';
-import { Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Images, Settings } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
 import SheetsConfig from './SheetsConfig';
+import ResultImagesEditor, { MAX_RESULT_IMAGES } from './ResultImagesEditor';
 
 export default function GeneralConfig() {
   const { instrument, dispatch } = useInstrument();
   const { generalConfig } = instrument;
+  const [imagesOpen, setImagesOpen] = useState(false);
+  const imageCount = generalConfig.resultImages?.length ?? 0;
 
   const updateConfig = (updates: Partial<typeof generalConfig>) => {
     dispatch({ type: 'UPDATE_GENERAL_CONFIG', payload: updates });
@@ -50,9 +55,23 @@ export default function GeneralConfig() {
 
       {/* Final message */}
       <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">
-          Mensaje Final
-        </h4>
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">
+            Mensaje Final
+          </h4>
+          <button
+            type="button"
+            onClick={() => setImagesOpen(true)}
+            title="Imágenes de publicidad del resultado"
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--primary)] transition-colors"
+          >
+            <Images className="h-4 w-4" />
+            Publicidad {imageCount}/{MAX_RESULT_IMAGES}
+          </button>
+        </div>
+        <Modal open={imagesOpen} onClose={() => setImagesOpen(false)} title="Imágenes de publicidad">
+          <ResultImagesEditor />
+        </Modal>
         <p className="text-xs text-[var(--muted)]">
           Este mensaje se mostrará al encuestado después de enviar sus respuestas.
         </p>

@@ -5,6 +5,7 @@ import { useInstrument } from '@/context/InstrumentContext';
 import { SurveyResponse } from '@/lib/types';
 import { Users, Award, TrendingUp, Clock, CheckCircle2, GraduationCap } from 'lucide-react';
 import { LEVEL_LABELS, type Level } from '@/lib/scoring';
+import { respondentLabel } from '@/lib/sheet-columns';
 
 interface ResultsDashboardProps {
   responses: SurveyResponse[];
@@ -235,14 +236,16 @@ export default function ResultsDashboard({ responses }: ResultsDashboardProps) {
               </tr>
             </thead>
             <tbody>
-              {responses.slice(0, 8).map((r, idx) => (
+              {responses.slice(0, 8).map((r, idx) => {
+                const label = respondentLabel(instrument, r);
+                return (
                 <tr key={r.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--background)] transition-colors">
                   <td className="py-2.5 px-3">
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] flex items-center justify-center text-xs font-semibold shrink-0">
-                        {r.respondentName ? r.respondentName.charAt(0) : `#`}
+                        {label ? label.charAt(0).toUpperCase() : `#`}
                       </div>
-                      <span className="text-[var(--text)]">{r.respondentName || `Anónimo #${idx + 1}`}</span>
+                      <span className="text-[var(--text)]">{label || `Anónimo #${idx + 1}`}</span>
                     </div>
                   </td>
                   <td className="py-2.5 px-3 text-center">
@@ -252,7 +255,8 @@ export default function ResultsDashboard({ responses }: ResultsDashboardProps) {
                     {new Date(r.submittedAt).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

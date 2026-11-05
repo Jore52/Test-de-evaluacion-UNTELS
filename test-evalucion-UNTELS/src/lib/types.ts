@@ -51,6 +51,7 @@ export interface CareerRecommendation {
   id: string;
   name: string;
   requirements: Record<string, 'low' | 'mid' | 'high'>;
+  description?: string; // se muestra en el resultado; falta en instrumentos anteriores
 }
 
 export interface SectionMessage {
@@ -63,6 +64,16 @@ export interface GeneralConfig {
   finalTitle: string; // vacío = título por defecto
   scoringMode: boolean; // el editor muestra los puntajes
   finalMessage: string;
+  cover?: Cover; // imagen de la pantalla de inicio
+  resultImages?: string[]; // publicidad de admisión en el resultado (/api/images/<id>)
+}
+
+export interface Cover {
+  desktop: string; // /api/images/<id>, proporción sugerida 3:1
+  mobile: string;  // 4:5; vacío = usa la de escritorio
+  showText: boolean;
+  overlayColor: string; // #rrggbb del fondo del texto
+  overlayOpacity: number; // 0–1
 }
 
 export interface Instrument {
@@ -126,6 +137,7 @@ export function createDefaultInstrument(): Instrument {
       finalTitle: '',
       scoringMode: false,
       finalMessage: '¡Gracias por completar el instrumento!',
+      resultImages: [],
     },
     sectionBreaks: [],
     sectionMessages: [],

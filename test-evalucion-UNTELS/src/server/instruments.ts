@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { Db } from '@/db/client';
 import type * as schema from '@/db/schema';
@@ -19,7 +19,8 @@ export async function listInstruments(db: Db): Promise<(Instrument & { responseC
     // nombres calificados: drizzle los escribe sin tabla y "id" se resolvería a submissions.id (uuid ≠ text)
     count: sql<number>`(select count(*)::int from "submissions" s where s."instrument_id" = "instruments"."id")`,
   }).from(instruments).orderBy(desc(instruments.updatedAt));
-  return rows.map((r) => ({ ...r.doc, responseCount: Number(r.count) }));
+  // sin portada: la lista no necesita las imágenes
+  return rows.map((r) => ({ ...r.doc, generalConfig: { ...r.doc.generalConfig, cover: undefined }, responseCount: Number(r.count) }));
 }
 
 export async function getInstrument(db: Db, id: string): Promise<Instrument> {
@@ -74,6 +75,23 @@ export async function publishInstrument(db: Db, user: AdminUser, id: string, pub
   await q(db).update(instruments).set({ doc: next, publishedDoc: publish ? next : null, updatedAt: new Date() }).where(eq(instruments.id, id));
   await logAudit(db, { actor: user.email, action: publish ? 'instrumento_publicado' : 'instrumento_despublicado', target: id });
   return next;
+}
+
+export async function countResponses(db: Db, id: string): Promise<{ count: number }> {
+  const [r] = await q(db).select({ count: sql<number>`count(*)::int` }).from(submissions).where(eq(submissions.instrumentId, id));
+  return { count: Number(r?.count ?? 0) };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Borra una respuesta (responseId) o todas las del instrumento. No toca las filas ya enviadas a Google Sheets. */
+export async function deleteResponses(db: Db, user: AdminUser, id: string, responseId?: string): Promise<{ deleted: number }> {
+  if (responseId !== undefined && !UUID.test(responseId)) throw new PublicError('not_found', 'No se encontró la respuesta.');
+  const where = responseId ? and(eq(submissions.instrumentId, id), eq(submissions.id, responseId)) : eq(submissions.instrumentId, id);
+  const r = await q(db).delete(submissions).where(where).returning({ id: submissions.id });
+  if (responseId && !r.length) throw new PublicError('not_found', 'No se encontró la respuesta.');
+  await logAudit(db, { actor: user.email, action: responseId ? 'respuesta_eliminada' : 'respuestas_eliminadas', target: id, details: { count: r.length, responseId } });
+  return { deleted: r.length };
 }
 
 /** Respuestas para el panel de Resultados (más recientes primero). */

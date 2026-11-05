@@ -84,3 +84,13 @@ export const sessions = pgTable('sessions', {
   expiresAt: ts('expires_at').notNull(),
   createdAt: ts('created_at').notNull().defaultNow(),
 });
+
+// Imágenes del instrumento (portada, publicidad): el doc solo guarda /api/images/<id>, así el autoguardado sigue liviano.
+// shortcut: las imágenes huérfanas (quitadas o de instrumentos borrados) no se limpian; agregar limpieza si la tabla crece
+export const images = pgTable('images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  mime: text('mime').notNull(),
+  data: text('data').notNull(), // base64
+  createdBy: text('created_by').notNull(),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});

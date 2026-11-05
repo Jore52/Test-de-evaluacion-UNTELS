@@ -14,9 +14,12 @@ import {
   Check,
   EyeOff,
   Link2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import PublishInfo from '@/components/editor/PublishInfo';
+import CoverEditor from '@/components/editor/CoverEditor';
+import Modal from '@/components/ui/Modal';
 import { useInstrument } from '@/context/InstrumentContext';
 
 export type SaveState = 'saving' | 'saved' | 'error';
@@ -44,6 +47,7 @@ export default function EditorHeader({ saveState, onPreview, onPublish, onDuplic
   const [menuOpen, setMenuOpen] = useState(false);
   const [publishFeedback, setPublishFeedback] = useState(false);
   const [showPublishInfo, setShowPublishInfo] = useState(false);
+  const [coverOpen, setCoverOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const publishRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +131,12 @@ export default function EditorHeader({ saveState, onPreview, onPublish, onDuplic
           >
             <Redo2 className="h-4 w-4" />
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setCoverOpen(true)} title="Imagen de portada" aria-label="Imagen de portada">
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+          <Modal open={coverOpen} onClose={() => setCoverOpen(false)} title="Imagen de portada">
+            <CoverEditor />
+          </Modal>
 
           <div className="w-px h-6 bg-[var(--border)] mx-1" />
 

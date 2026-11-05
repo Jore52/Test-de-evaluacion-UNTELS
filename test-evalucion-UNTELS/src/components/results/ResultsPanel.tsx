@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInstrument } from '@/context/InstrumentContext';
-import { api } from '@/lib/storage';
+import { api, deleteResponses } from '@/lib/storage';
+import { useCanManage } from '@/context/UserContext';
 import { SurveyResponse } from '@/lib/types';
 import ResultsIndividual from './ResultsIndividual';
 import ResultsGeneral from './ResultsGeneral';
 import ResultsDashboard from './ResultsDashboard';
-import { Users, BarChart3, LayoutDashboard, AlertCircle, RefreshCw } from 'lucide-react';
+import { Users, BarChart3, LayoutDashboard, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 
 type ResultsTab = 'individual' | 'general' | 'dashboard';
 
@@ -17,8 +18,9 @@ const TABS: { id: ResultsTab; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
 ];
 
-export default function ResultsPanel() {
+export default function ResultsPanel({ onCount }: { onCount?: (n: number) => void }) {
   const { instrument } = useInstrument();
+  const canManage = useCanManage();
   const [activeTab, setActiveTab] = useState<ResultsTab>('dashboard');
 
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
@@ -26,12 +28,22 @@ export default function ResultsPanel() {
   const [error, setError] = useState<string | null>(null);
   const fetchResponses = useCallback(() => {
     api<SurveyResponse[]>(`/api/instruments/${encodeURIComponent(instrument.id)}/responses`)
-      .then(setResponses)
+      .then((rs) => { setResponses(rs); onCount?.(rs.length); })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [instrument.id]);
+  }, [instrument.id, onCount]);
   useEffect(() => { fetchResponses(); }, [fetchResponses]);
   const reload = () => { setLoading(true); setError(null); fetchResponses(); };
+  const deleteAll = async () => {
+    if (!confirm(`¿Eliminar las ${responses.length} respuestas de este instrumento? No se puede deshacer (si hay hoja de Google vinculada, las filas ya enviadas se mantienen allí).`)) return;
+    try {
+      await deleteResponses(instrument.id);
+    } catch (e) {
+      setError((e as Error).message);
+      return;
+    }
+    reload();
+  };
 
   if (instrument.questions.length === 0) {
     return (
@@ -56,6 +68,12 @@ export default function ResultsPanel() {
             <button onClick={reload} title="Actualizar" className="ml-2 inline-flex align-middle p-1 rounded text-[var(--muted)] hover:text-[var(--text)]">
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
+            {canManage && responses.length > 0 && (
+              <button onClick={deleteAll} className="ml-3 inline-flex items-center gap-1 align-middle text-sm text-red-600 hover:underline">
+                <Trash2 className="h-3.5 w-3.5" />
+                Eliminar todas
+              </button>
+            )}
           </p>
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         </div>
@@ -82,7 +100,7 @@ export default function ResultsPanel() {
       {/* Tab content */}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-6">
         {activeTab === 'individual' && (
-          <ResultsIndividual responses={responses} />
+          <ResultsIndividual responses={responses} onDeleted={reload} />
         )}
         {activeTab === 'general' && (
           <ResultsGeneral responses={responses} />

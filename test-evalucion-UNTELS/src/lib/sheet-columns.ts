@@ -10,7 +10,7 @@ type Column = SheetColumn & { value: (r: SheetRow) => Cell };
 const LIMA_OFFSET = 5 * 3600_000;
 const fecha = (d: Date) => new Date(d.getTime() - LIMA_OFFSET).toISOString().slice(0, 16).replace('T', ' ');
 
-function answerText(q: Question, v: AnswerValue | undefined): Cell {
+export function answerText(q: Question, v: AnswerValue | undefined): Cell {
   if (v === undefined || v === null) return '';
   const label = (id: string) => (id.startsWith(OTHER_PREFIX) ? `Otro: ${id.slice(OTHER_PREFIX.length)}` : q.options.find((o) => o.id === id)?.label ?? '');
   if (Array.isArray(v)) return v.map(label).join('; ');
@@ -49,4 +49,10 @@ export function mergeColumns(stored: SheetColumn[], current: Column[]): { layout
     ...current.filter((c) => !seen.has(c.key)).map((c) => ({ key: c.key, header: c.header })),
   ];
   return { layout, byKey };
+}
+
+/** Nombre del encuestado: el guardado o, si está vacío (respuestas antiguas), su respuesta a la primera pregunta. */
+export function respondentLabel(inst: Instrument, r: { respondentName: string; answers: Record<string, AnswerValue> }): string {
+  const first = inst.questions[0];
+  return r.respondentName || (first ? String(answerText(first, r.answers[first.id])).trim() : '');
 }

@@ -83,8 +83,16 @@ export default function Step4Careers() {
             <tbody>
               {careers.map((career) => (
                 <tr key={career.id} className="hover:bg-[var(--surface)] transition-colors">
-                  <td className="px-3 py-3 border-b border-[var(--border)]">
-                    <span className="text-sm font-medium text-[var(--text)]">{career.name}</span>
+                  <td className="px-3 py-3 border-b border-[var(--border)] align-top space-y-1.5">
+                    <span className="block text-sm font-medium text-[var(--text)]">{career.name}</span>
+                    <textarea
+                      aria-label={`Descripción de ${career.name}`}
+                      value={career.description ?? ''}
+                      onChange={(e) => dispatch({ type: 'UPDATE_CAREER_DESCRIPTION', payload: { careerId: career.id, description: e.target.value } })}
+                      placeholder="Descripción (hasta 3 líneas, se muestra en el resultado)"
+                      rows={3}
+                      className="w-full min-w-[220px] rounded-lg border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--text)] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 resize-y placeholder:text-[var(--muted)]"
+                    />
                   </td>
                   {areas.map((area) => {
                     const currentLevel = career.requirements[area.id] || '';

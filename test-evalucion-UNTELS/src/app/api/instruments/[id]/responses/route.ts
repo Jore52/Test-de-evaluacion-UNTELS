@@ -1,4 +1,8 @@
 import { adminRoute } from '@/server/admin-route';
-import { listResponses } from '@/server/instruments';
+import { countResponses, deleteResponses, listResponses } from '@/server/instruments';
 
-export const GET = adminRoute<{ id: string }>('view', ({ db, params }) => listResponses(db, params.id));
+type P = { id: string };
+// ?count=1: solo el total (la pestaña del editor no necesita cargar todas las respuestas)
+export const GET = adminRoute<P>('view', ({ db, params, req }) =>
+  new URL(req.url).searchParams.has('count') ? countResponses(db, params.id) : listResponses(db, params.id));
+export const DELETE = adminRoute<P>('manage', ({ db, user, params }) => deleteResponses(db, user, params.id));

@@ -44,6 +44,7 @@ export type InstrumentAction =
   | { type: 'ADD_CAREER'; payload: { name: string } }
   | { type: 'DELETE_CAREER'; payload: string }
   | { type: 'UPDATE_CAREER_REQUIREMENT'; payload: { careerId: string; areaId: string; level: 'low' | 'mid' | 'high' | '' } }
+  | { type: 'UPDATE_CAREER_DESCRIPTION'; payload: { careerId: string; description: string } }
   // General Config
   | { type: 'UPDATE_GENERAL_CONFIG'; payload: Partial<GeneralConfig> }
   // Sections
@@ -363,6 +364,7 @@ function instrumentReducer(state: InstrumentState, action: InstrumentAction): In
         id: crypto.randomUUID(),
         name: action.payload.name,
         requirements: {},
+        description: '',
       };
       return {
         ...prev,
@@ -400,6 +402,18 @@ function instrumentReducer(state: InstrumentState, action: InstrumentAction): In
             }
             return { ...c, requirements: reqs };
           }),
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    }
+    case 'UPDATE_CAREER_DESCRIPTION': {
+      const prev = pushHistory(state);
+      const { careerId, description } = action.payload;
+      return {
+        ...prev,
+        current: {
+          ...prev.current,
+          careers: prev.current.careers.map((c) => (c.id === careerId ? { ...c, description } : c)),
           updatedAt: new Date().toISOString(),
         },
       };

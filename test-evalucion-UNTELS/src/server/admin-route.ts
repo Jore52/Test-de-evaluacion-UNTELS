@@ -7,7 +7,7 @@ import { sameOrigin } from './auth/google-config';
 import type { AdminUser } from './auth/types';
 
 const STATUS = { not_found: 404, not_available: 409, invalid: 400, forbidden: 403 } as const;
-const MAX_BODY = 1024 * 1024; // un instrumento grande cabe holgado
+const MAX_BODY = 1024 * 1024; // un instrumento grande cabe holgado (las imágenes van aparte)
 
 /** Ruta JSON del panel: sesión obligatoria, permiso, CSRF (mismo origen) en escrituras y mapeo de errores. */
 export function adminRoute<P = Record<string, string>>(

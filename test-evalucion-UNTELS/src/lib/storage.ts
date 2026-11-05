@@ -24,3 +24,8 @@ export const duplicateInstrument = (id: string) =>
 export const publishInstrument = (id: string, publish: boolean) =>
   api<Instrument>(`/api/instruments/${encodeURIComponent(id)}/publish`, { method: 'POST', body: JSON.stringify({ publish }) });
 export { api };
+const responsesUrl = (id: string) => `/api/instruments/${encodeURIComponent(id)}/responses`;
+export const countResponses = (id: string) => api<{ count: number }>(`${responsesUrl(id)}?count=1`);
+/** Sin responseId borra todas las respuestas del instrumento. */
+export const deleteResponses = (id: string, responseId?: string) =>
+  api<{ deleted: number }>(responseId ? `${responsesUrl(id)}/${encodeURIComponent(responseId)}` : responsesUrl(id), { method: 'DELETE' });

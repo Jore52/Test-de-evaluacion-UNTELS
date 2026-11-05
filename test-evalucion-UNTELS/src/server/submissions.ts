@@ -6,6 +6,7 @@ import type * as schema from '@/db/schema';
 import { submissions } from '@/db/schema';
 import { validateAnswers } from '@/lib/answers';
 import { computeResult, type SurveyResult } from '@/lib/scoring';
+import { respondentLabel } from '@/lib/sheet-columns';
 import type { AnswerValue, Instrument } from '@/lib/types';
 import { PublicError } from './errors';
 import { getPublished } from './instruments';
@@ -29,18 +30,20 @@ export async function publishedOrThrow(db: Db, id: string): Promise<Instrument> 
 
 export async function findMine(db: Db, instrumentId: string, token: unknown): Promise<MySubmission | null> {
   const [r] = await q(db).select({
-    name: submissions.respondentName, answers: submissions.answers, result: submissions.result, completedAt: submissions.completedAt,
+    answers: submissions.answers, result: submissions.result, completedAt: submissions.completedAt,
   }).from(submissions).where(and(eq(submissions.instrumentId, instrumentId), eq(submissions.deviceTokenHash, deviceHash(token))));
-  return r ?? null;
+  // el nombre guardado es solo para el panel: el encuestado no lo ve
+  return r ? { ...r, name: '' } : null;
 }
 
 /** Guarda (o actualiza si el instrumento permite modificar) la respuesta del dispositivo. El resultado se calcula aquí, nunca en el cliente. */
 export async function submit(db: Db, instrumentId: string, body: Record<string, unknown>): Promise<MySubmission & { already: boolean }> {
   const inst = await publishedOrThrow(db, instrumentId);
   const hash = deviceHash(body.deviceToken);
-  const name = ''; // sin nombre: si el admin lo necesita, lo pide como pregunta
   const { answers, missing } = validateAnswers(inst, body.answers);
   if (missing.length) throw new PublicError('invalid', 'Faltan preguntas obligatorias por responder.');
+  // el nombre del encuestado es su respuesta a la primera pregunta (p. ej. "Apellidos")
+  const name = respondentLabel(inst, { respondentName: '', answers }).slice(0, 200);
   const result = computeResult(inst, answers);
   const now = new Date();
   const values = { instrumentId, respondentName: name, answers, result, totalScore: result.totalScore, deviceTokenHash: hash, completedAt: now, modifiedAt: now };
@@ -60,5 +63,5 @@ export async function submit(db: Db, instrumentId: string, body: Record<string, 
     if (!mine) throw new PublicError('not_available', 'No pudimos registrar tu respuesta. Inténtalo de nuevo.');
     return { ...mine, already: true };
   }
-  return { name, answers, result, completedAt: now, already: false };
+  return { name: '', answers, result, completedAt: now, already: false };
 }
