@@ -37,7 +37,8 @@ export function percentileFor(inst: Instrument, areaId: string, raw: number): nu
   let best = 0;
   for (const col of inst.percentiles) {
     const cut = col.values[areaId];
-    if (typeof cut === 'number' && raw >= cut && col.number > best) best = col.number;
+    // el editor guarda la celda vacía como 0: 0 = "sin corte", si no todo puntaje alcanzaría ese percentil
+    if (typeof cut === 'number' && cut > 0 && raw >= cut && col.number > best) best = col.number;
   }
   return best;
 }
